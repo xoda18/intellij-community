@@ -1,102 +1,104 @@
-### Starter Core
+<!-- Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license. -->
 
-#### Overview
+# Starter Core
 
-The core of the Starter test framework for IntelliJ IDEA-based IDEs. For a general overview, refer to
-the [main README](https://github.com/JetBrains/intellij-ide-starter/blob/master/README.md)
+The core of the Starter framework for writing integration tests for IntelliJ Platform-based IDEs.
 
-##### Basics
+## Basics
 
-Test starts IDE in a separate process so the test runtime and the IDE runtime are isolated.
-To control IDE you should use commands.
-There are two ways to make the IDE execute the command
+Each test runs the IDE as a separate process, isolating the test runtime from the IDE runtime.
+The IDE is driven by commands, which can be executed in two ways:
 
-1) Write a scenario to the file (list of plain text strings in a special format) and pass it to the IDE
-2) trigger single command remotely with a JMX call (Driver implementation).  
-   Currently is not available in a public version of Starter.
+1. Write a scenario to a file (a list of plain-text strings in a special format) and pass it to the IDE.
+2. Trigger a single command remotely with a JMX call (`Driver` implementation).
 
-In both cases commands will be executed
-via [performanceTestingPlugin](https://github.com/JetBrains/intellij-community/tree/1bf43101d9e285b23906c9952ebc37077a9e9dc9/plugins/performanceTesting)
-or it's extension points.
+In both cases, commands are executed via the 
+[`performanceTestingPlugin`](https://github.com/JetBrains/intellij-community/tree/master/plugins/performanceTesting) or its extension points.
+Despite its name, this plugin provides the command engine used for integration tests, not only performance tests.
 
-List of basic out-of-the-box commands that goes with performanceTestingPlugin is
-available [here](https://github.com/JetBrains/intellij-community/blob/9f011b378a6fffe4859f76966d70a63910e3e1c8/plugins/performanceTesting/commands-model/src/com/intellij/tools/ide/performanceTesting/commands/generalCommandChain.kt)
+A list of basic out-of-the-box commands that comes with the `performanceTestingPlugin` is available in 
+[`generalCommandChain`](https://github.com/JetBrains/intellij-community/blob/master/plugins/performanceTesting/commands-model/src/com/intellij/tools/ide/performanceTesting/commands/generalCommandChain.kt).
 
-##### Run with JUnit5
+## Run with JUnit5
 
-Starter isn't bound to any of test engines, so you can run it via any test engine you like.  
-But there is ready to use JUnit5 integration library
-and [examples of tests based on JUnit5 can be found here](https://github.com/JetBrains/intellij-ide-starter/blob/master/intellij.tools.ide.starter.examples/testSrc/com/intellij/ide/starter/examples/junit5/IdeaJUnit5ExampleTest.kt)
+`Starter` is not bound to any test engine and can be run with any of them.
+A ready-to-use JUnit5 integration library is also available.
+Examples of JUnit5-based tests are available in
+[`IdeaJUnit5ExampleTest`](https://github.com/JetBrains/ide-starter-examples/blob/master/intellij.tools.ide.starter.examples/testSrc/com/intellij/ide/starter/examples/junit5/IdeaJUnit5ExampleTest.kt).
 
-##### Short guide how to write your own command/extension of performanceTestingPlugin
+## Writing a custom command or performanceTestingPlugin extension
 
-See [createCustomPerformanceCommand.md](documentation/createCustomPerformanceCommand.md)
+See [createCustomPerformanceCommand.md](documentation/createCustomPerformanceCommand.md).
 
-#### How to override/modify default starter behavior
+## How to override/modify default Starter behavior
 
-You can modify or extend any behavior initialized through the Kodein DI framework according to your needs. To do so, refer to the    
-[DI container initialization](https://github.com/JetBrains/intellij-ide-starter/blob/master/intellij.tools.ide.starter/src/com/intellij/ide/starter/di/diContainer.kt)  
-For example, you can create your own implementation of CIServer and provide it through DI. Make sure to use the same Kodein version
-specified in the starter project's `build.gradle`.
+Any behavior initialized through the `Kodein` DI framework can be modified or extended.
+To do so, refer to the
+[DI container initialization](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/di/diContainer.kt).
+
+For example, create a custom implementation of `com.intellij.ide.starter.ci.CIServer` and provide it through DI.
+Make sure to use the same `Kodein` version specified in the Starter project's `build.gradle`.
 
 Example:
 
-```
+```kotlin
 di = DI {
       extend(di)
       bindSingleton<CIServer>(overrides = true) { YourImplementationOfCI() }
 }
 ```
 
-### Freeze/exception collection
+## Freeze/exception collection
 
-Freezes or exceptions are collected by default by Starter and reported as an individual failure of a test on CI.  
-To enable this machinery you should
-provide [an implementation of your CiServer](https://github.com/JetBrains/intellij-ide-starter/blob/8c19f61989510def61e864515014d6e0df358342/intellij.tools.ide.starter/src/com/intellij/ide/starter/di/diContainer.kt#L50) (
-by
-default [NoCiServer](https://github.com/JetBrains/intellij-ide-starter/blob/8c19f61989510def61e864515014d6e0df358342/intellij.tools.ide.starter/src/com/intellij/ide/starter/ci/NoCIServer.kt#L7)
-is used).  
-As an example of implementation you may take a look
-at [TeamCityCiServer](https://github.com/JetBrains/intellij-ide-starter/blob/8c19f61989510def61e864515014d6e0df358342/intellij.tools.ide.starter/src/com/intellij/ide/starter/ci/teamcity/TeamCityCIServer.kt#L18).
-Yust override your CiServer in DI (as described in the code snipped above) and reporting of freezes and exceptions should work.
+Freezes and exceptions are collected by Starter by default and reported as individual test failures on CI.
+To enable this machinery, provide
+[an implementation of `CIServer`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/ci/CIServer.kt)
+(by default,
+[`NoCIServer`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/ci/NoCIServer.kt)
+is used).
+For an example implementation, see
+[`TeamCityCIServer`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/ci/teamcity/TeamCityCIServer.kt).
+Override `CIServer` in DI (as described in the code snippet above), and reporting of freezes and exceptions will work.
 
-If you want a more detailed customization you might find the following useful:
-Test reports errors
-via [ErrorReporter](https://github.com/JetBrains/intellij-ide-starter/blob/8c19f61989510def61e864515014d6e0df358342/intellij.tools.ide.starter/src/com/intellij/ide/starter/di/diContainer.kt#L51).
-The default implementation
-is [ErrorReporterToCI](https://github.com/JetBrains/intellij-ide-starter/blob/8c19f61989510def61e864515014d6e0df358342/intellij.tools.ide.starter/src/com/intellij/ide/starter/report/ErrorReporterToCI.kt#L15).
+For more detailed customization, the following may be useful.
+A test reports errors via
+[`ErrorReporter`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/report/ErrorReporter.kt).
+The default implementation is
+[`ErrorReporterToCI`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/report/ErrorReporterToCI.kt).
 
-If you want to customize head of the error message you can do that via your own implementation
-of [FailureDetailsOnCi](https://github.com/JetBrains/intellij-ide-starter/blob/8c19f61989510def61e864515014d6e0df358342/intellij.tools.ide.starter/src/com/intellij/ide/starter/report/FailureDetailsOnCI.kt#L10),
+To customize the header of the error message, provide a custom implementation of
+[`FailureDetailsOnCI`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.starter/src/com/intellij/ide/starter/report/FailureDetailsOnCI.kt),
 which is also registered via DI.
 
-### Debugging the test
+## Debugging the test
 
-TIP: If you enable `debugger.auto.attach.from.console` Registry, you can just click debug on the test in IntelliJ IDEA and everything will
-happen automatically.
+> **Tip:** If the `debugger.auto.attach.from.console` registry key is enabled,
+> the test can be run under the debugger in IntelliJ IDEA, and attachment happens automatically.
 
-Since tests are executed inside the IDE as an external process for test, you cannot directly debug them.
-To debug a test, you need to connect remotely to the IDE instance.
+Since the IDE runs as a separate process from the test, the test cannot be debugged directly.
+To debug a test, connect remotely to the IDE instance.
 
 General debugging workflow:
 
-1. Create run configuration for Remote JVM Debug:
-   Debugger mode: **Attach to Remote JVM**   
-   Host: **localhost** Port: **5005**  
-   Command line arguments for remote JVM: ```-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005```
-2. Run your test. The required option will be added automatically.
+1. Create a run configuration for Remote JVM Debug:
+  - Debugger mode: Attach to Remote JVM
+  - Host: `localhost`
+  - Port: `5005`
+  - Command line arguments for remote JVM: `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005`
+2. Run the test.
+3. The required option will be added automatically.
 
 After seeing the console prompt to connect remotely to port 5005, run the created run configuration.
 
-### Using JUnit5 extensions to modify Starter behavior
+## Using JUnit5 extensions to modify Starter behavior
 
-For JUnit5, there are several extensions, which provide a convenient way to set configuration variables as needed.
-List of
-extensions [can be found here](https://github.com/JetBrains/intellij-ide-starter/tree/master/intellij.tools.ide.starter.junit5/src/com/intellij/ide/starter/junit5/config)
+For JUnit5, several extensions provide a convenient way to set configuration variables.
+A list of extensions is available in the
+[config package](https://github.com/JetBrains/intellij-community/tree/master/tools/intellij.tools.ide.starter.junit5/src/com/intellij/ide/starter/junit5/config).
 
 Example:
 
-```
+```kotlin
 @ExtendWith(EnableClassFileVerification::class)
 @ExtendWith(UseLatestDownloadedIdeBuild::class)
 class ClassWithTest {
@@ -104,17 +106,20 @@ class ClassWithTest {
 }
 ```
 
-Also you might find useful environment variables, that can tweak Starter behavior.  
-They are located in configuration storage in `com.intellij.ide.starter.config.StarterConfigurationStorage`
+Environment variables that tweak Starter behavior may also be useful.
+They are located in `com.intellij.ide.starter.config.StarterConfigurationStorage`.
 
-### Downloading custom releases
+## Downloading custom releases
 
-By default, when useEAP or useRelease methods are called, IDE installers will be downloaded from JetBrains' public hosting. If no version is
-specified, the latest version will be used. However, you can specify a desired version if needed.
+By default, when `useEAP()` or `useRelease()` methods are called,
+IDE installers will be downloaded from JetBrains' public hosting. 
+If no version is specified, the latest version will be used.
+However, a specific version can be specified if needed.
 
-### How to specify another URL for IDE downloading
+## How to specify another URL for IDE downloading
 
-1. You need to override `IdeDownloader` from default downloader to downloader which looks into the `downloadURI` field in `IdeInfo`:
+1. Override the default `IdeDownloader` with `IdeByLinkDownloader`.
+   This downloader uses the `downloadURI` field from `IdeInfo`.
 
 ```kotlin
 init {
@@ -125,45 +130,52 @@ init {
 }
 ```
 
-2. You need to provide custom `IdeInfo` with the URL of your choice
+2. Create a custom `IdeInfo` by taking the predefined IntelliJ IDEA Ultimate configuration and overriding only the download URL.
 
 ```kotlin
 Starter.newContext(
-  CurrentTestMethod.hyphenateWithClass(), TestCase(
-  IdeInfo.IdeaUltimate.copy(downloadURI = URI("www.example.com")), GitHubProject.fromGithub(
-  branchName = "master",
-  repoRelativeUrl = "jitpack/gradle-simple.git"
-)
-)
+  testName = "custom-ide-download-url",
+  testCase = TestCase(
+    IdeProductProvider.IU.copy(
+      downloadURI = URI("https://example.com/idea-IU-installer.dmg")
+    ),
+    GitHubProject.fromGithub(
+      branchName = "master",
+      repoRelativeUrl = "jitpack/gradle-simple.git"
+    )
+  )
 )
 ```
 
-`IdeInfo.IdeaUltimate.copy(downloadURI = URI("[www.example.com](http://www.example.com)"))` - this is the main part, we say that we will
-use `IdeaUltimate` (Idea Ultimate) so we copy all the properties except that we also provide URL from which it should be downloaded.
+`IdeProductProvider.IU.copy(downloadURI = URI("https://example.com/idea-IU-installer.dmg"))`
+is the key part of this example.
+It starts with the standard IntelliJ IDEA Ultimate configuration and changes only the `downloadURI` field,
+so Starter will download the IDE from the specified URL.
 
-Note: To use `IdeInfo.IdeaUltimate`, you must add a dependency on `intellij.tools.ide.starter.build.server.idea.ultimate` module.
-This compile-time dependency ensures the IDE build server knows which IDEs your tests require.
+This example uses `IdeProductProvider.IU` directly, so no additional `IdeInfo.IdeaUltimate` setup is required here.
 
-### Modifying VM Options
+## Modifying VM Options
 
-There are two ways to modify the VM options. One is on `IDETestContext` and another on `IDERunContext`. The first one is used to modify
-VM options for the whole context that can be reused between runs. The second is used to modify VM options just for the current run.
+There are two ways to modify the VM options.
+One is on `IDETestContext`, and the other is on `IDERunContext`.
+The first one is used to modify VM options for the whole context that can be reused between runs. The second is used to modify VM options for the current run only.
 
-### Performance testing/Metrics collection
+## Performance testing/Metrics collection
 
-Out of the box, Starter can collect OpenTelemetry metrics
-using [intellij.tools.ide.metrics.collector.starter](https://github.com/JetBrains/intellij-ide-starter/tree/master/intellij.tools.ide.metrics.collector.starter#readme)
+Out of the box, Starter can collect OpenTelemetry metrics using the
+[`intellij.tools.ide.metrics.collector.starter`](https://github.com/JetBrains/intellij-community/tree/master/tools/intellij.tools.ide.metrics.collector.starter#readme)
 module.
 
-If you're interested in a more general approach to OpenTelemetry metrics collection (without Starter involved),
-you can look
-at [intellij.tools.ide.metrics.collector](https://github.com/JetBrains/intellij-community/tree/master/tools/intellij.tools.ide.metrics.collector#readme).
+For a more general approach to OpenTelemetry metrics collection (without Starter), see the 
+[`intellij.tools.ide.metrics.collector`](https://github.com/JetBrains/intellij-community/tree/master/tools/intellij.tools.ide.metrics.collector#readme)
+module.
 
-There is also an option to run unit tests as a benchchmark tests
-via [Benchmark.newBenchmark(...)](https://github.com/JetBrains/intellij-community/blob/2067fd81905bd789332e206d2be4ef007b133c76/tools/intellij.tools.ide.metrics.benchmark/src/com/intellij/tools/ide/metrics/benchmark/Benchmark.java#L31).  
-Examples [of usages in IntelliJ repo](https://github.com/search?q=repo%3AJetBrains%2Fintellij-community%20Benchmark.newBenchmark&type=code).
+Unit tests can also be run as benchmark tests via
+[`Benchmark.newBenchmark()`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.metrics.benchmark/src/com/intellij/tools/ide/metrics/benchmark/Benchmark.java).
+See [examples of usages in IntelliJ repo](https://github.com/search?q=repo%3AJetBrains%2Fintellij-community%20Benchmark.newBenchmark&type=code).
   
-More details can be found
-in [com.intellij.testFramework.BenchmarkTestInfo#start()](https://github.com/JetBrains/intellij-community/blob/7fe480df8be14f0c7de59fcdb56ac5bf056b24b6/platform/testFramework/src/com/intellij/testFramework/BenchmarkTestInfo.java#L66),
-[com.intellij.testFramework.BenchmarkTestInfo#startAsSubtest()](https://github.com/JetBrains/intellij-community/blob/7fe480df8be14f0c7de59fcdb56ac5bf056b24b6/platform/testFramework/src/com/intellij/testFramework/BenchmarkTestInfo.java#L76),
-[com.intellij.testFramework.BenchmarkTestInfoImpl#withMetricsCollector()](https://github.com/JetBrains/intellij-community/blob/7fe480df8be14f0c7de59fcdb56ac5bf056b24b6/tools/intellij.tools.ide.metrics.benchmark/src/com/intellij/tools/ide/metrics/benchmark/BenchmarkTestInfoImpl.java#L207),
+More details can be found in
+[`BenchmarkTestInfo.start()`](https://github.com/JetBrains/intellij-community/blob/master/platform/testFramework/src/com/intellij/testFramework/BenchmarkTestInfo.java),
+[`BenchmarkTestInfo.startAsSubtest()`](https://github.com/JetBrains/intellij-community/blob/master/platform/testFramework/src/com/intellij/testFramework/BenchmarkTestInfo.java)
+and
+[`BenchmarkTestInfoImpl.withMetricsCollector()`](https://github.com/JetBrains/intellij-community/blob/master/tools/intellij.tools.ide.metrics.benchmark/src/com/intellij/tools/ide/metrics/benchmark/BenchmarkTestInfoImpl.java).
