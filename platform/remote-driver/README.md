@@ -2,8 +2,6 @@
 
 # Integration Tests with Driver
 
-<link-summary>Using the Driver API to call code in a running IDE via JMX for end-to-end testing.</link-summary>
-
 The `com.intellij.driver.client.Driver` API provides a generic interface to call code in a running IntelliJ Platform-based IDE instance, such as service and utility methods.
 It connects to a process via [JMX](https://en.wikipedia.org/wiki/Java_Management_Extensions) protocol and creates remote proxies for classes of the running IDE.
 The main purpose of this API is to execute IDE actions and observe the state of the process in end-to-end testing.
